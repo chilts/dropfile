@@ -1,0 +1,18 @@
+Source: dropfile
+Section: perl
+Priority: extra
+Maintainer: Andrew Chilton <chilts@appsattic.com>
+Uploaders: Andrew Chilton <chilts@appsattic.com>
+Standards-Version: 3.6.1
+Build-Depends: debhelper (>= 7)
+Build-Depends-Indep: perl
+
+Package: dropfile
+Section: perl
+Priority: extra
+Architecture: all
+Depends: ${perl:Depends}, libconfig-simple-perl, libfile-slurp-perl, liblog-log4perl-perl, libawssum-perl
+Description: command line tool to send files to Amazon S3
+ DropFile allows programs to drop files into a directory for upload to Amazon
+ S3. This means that the program does not have to worry about the technical
+ details of doing this.

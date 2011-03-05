@@ -1,0 +1,170 @@
+#!/usr/bin/perl
+## ----------------------------------------------------------------------------
+
+use strict;
+use warnings;
+
+use Config::Simple;
+use File::Glob;
+use File::Basename;
+use File::Find;
+use File::Slurp;
+use Log::Log4perl qw(get_logger);
+use AwsSum::Amazon::S3;
+
+## ----------------------------------------------------------------------------
+# constants, setup and initialisation
+
+my $VERSION = '0.1.0';
+
+my $basedir = q{/var/lib/dropfile};
+
+Log::Log4perl::init('/etc/dropfile.conf');
+my $log = get_logger();
+
+## ----------------------------------------------------------------------------
+
+{
+    $log->info( q{=} x 79 );
+    $log->info( q{Started} );
+
+    # Firstly, find all the files within the $basedir (these should each
+    # correlate to a directory which contains files for upload).
+    my @buckets = map { scalar fileparse($_, '.conf') } </var/lib/dropfile/*.conf>;
+
+    foreach my $bucket ( @buckets ) {
+        process( $bucket );
+    }
+
+    $log->info( q{Finished} );
+    $log->info( q{=} x 79 );
+}
+
+## ----------------------------------------------------------------------------
+
+sub process {
+    my ($bucket) = @_;
+
+    $log->info("Processing $bucket:");
+
+    my $cfg = {};
+    Config::Simple->import_from( qq{/var/lib/dropfile/$bucket.conf}, $cfg );
+
+    # check we have the following in the bucket_cfg
+    foreach my $key ( qw(AwsAccessKeyId AwsSecretAccessKey Region BucketName ) ) {
+        next if exists $cfg->{$key};
+
+        $log->fatal( qq{Couldn't find '$key' in $bucket.conf} );
+        exit 2;
+    }
+
+    my $s3 = AwsSum::Amazon::S3->new();
+    $s3->access_key_id( $cfg->{AwsAccessKeyId} );
+    $s3->secret_access_key( $cfg->{AwsSecretAccessKey} );
+    $s3->region( $cfg->{Region} );
+
+    # find any files within this directory
+    my @files;
+    find( sub { -f && push @files, $File::Find::name }, qq{/var/lib/dropfile/$bucket/} );
+
+    foreach my $filename ( @files ) {
+        my $partial_path = $filename;
+        $partial_path =~ s{ \A \/var\/lib\/dropfile\/$bucket }{}gxms;
+        $log->info( qq{- $partial_path} );
+
+        my $content = read_file( $filename );
+
+        my $data;
+        eval {
+            $data = $s3->create_object({
+                BucketName => $cfg->{BucketName},
+                ObjectName => $filename,
+                Content    => $content,
+            });
+        };
+        if ( $@ ) {
+            # we died, so something went drastically wrong
+            $log->fatal( $@ );
+            print $@;
+            next;
+        }
+
+        # if there is an error, log it
+        unless ( $data->{_awssum}{ok} ) {
+            $log->error( qq{$data->{_awssum}{error}: $data->{_awssum}{message}} );
+        }
+    }
+
+    $log->info( qq{Bucket '$bucket' finished} );
+    $log->info( q{-} x 79 );
+}
+
+## ----------------------------------------------------------------------------
+
+=head1 NAME
+
+dropfile - the easy way to push your files to Amazon S3
+
+=head1 SYNOPSIS
+
+    # Make a directory within dropfile's directory structure (Note: a directory
+    # will be synonymous with a bucket).
+
+    $ sudo mkdir /var/lib/dropfile/my-files
+    $ sudo chown `whoami`.`whoami` /var/lib/dropfile/my-files
+
+    # Create your config file
+
+    $ cat > /var/lib/dropfile/my-files.conf
+    AwsAccessKeyId       ********************
+    AwsSecretAccessKey   ****************************************
+    Region               us-east-1
+    BucketName           my-files
+    ^D
+
+    $ sudo dropfile &
+    $ sudo tail -f /var/log/dropfile.log
+
+=head1 WHY DROPFILE
+
+DropFile is a small program which runs regularly, reads files from a set of
+directories and uploads them to the appropriate place in Amazon S3.
+
+The main reason for having this done as a background task is so that your
+program needn't worry about doing it itself, checking for failure cases or
+upholding the user from doing what they really want to do. Instead, the program
+can write a file into a predetermined directory and forget about it. This
+program then uploads it to S3.
+
+It can be used for backing up files, remote storage or even for serving files
+from S3 or CloudFront.
+
+=head1 THE PHILOSOPHY OF DROPMAIL
+
+DropFile has been written so you don't have to deal with Amazon S3. Instead,
+just write a file and you're done - this is very easy and fast.
+
+=head1 COPYRIGHT & LICENSE
+
+Written by Andrew Chilton for AppsAttic Ltd.
+
+Copyright 2011 AppsAttic Ltd.
+
+    DropFile is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+You are free to distribute this software under the terms of the GNU General
+Public License. On Debian systems, the complete text of the GNU General Public
+License can be found in /usr/share/common-licenses/GPL file.
+
+=cut
