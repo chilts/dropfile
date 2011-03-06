@@ -16,6 +16,9 @@ ToDo.
 
 You can look for information at:
 
+* DropFile home page
+    * <http://www.appsattic.com/open-source/dropfile/>
+
 * Project home
     * <http://github.com/appsattic/dropfile>
 
@@ -24,7 +27,7 @@ You can look for information at:
 
 # COPYRIGHT AND LICENSE
 
-Written by Andrew Chilton.
+Written by Andrew Chilton for AppsAttic Ltd.
 
 Copyright 2011 AppsAttic Ltd.
 
