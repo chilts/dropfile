@@ -92,8 +92,14 @@ sub process {
             next;
         }
 
-        # if there is an error, log it
-        unless ( $data->{_awssum}{ok} ) {
+        # if everything ok, delete the file
+        if ( $data->{_awssum}{ok} ) {
+            unless ( unlink $filename ) {
+                $log->error( qq{Couldn't remove file: $filename} );
+            }
+        }
+        else {
+            # there was an error, so log it
             $log->error( qq{$data->{_awssum}{error}: $data->{_awssum}{message}} );
         }
     }
