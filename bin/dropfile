@@ -9,6 +9,7 @@ use File::Glob;
 use File::Basename;
 use File::Find;
 use File::Slurp;
+use List::Util qw(shuffle);
 use Log::Log4perl qw(get_logger);
 use AwsSum::Amazon::S3;
 
@@ -67,7 +68,9 @@ sub process {
     my @files;
     find( sub { -f && push @files, $File::Find::name }, qq{/var/lib/dropfile/$bucket/} );
 
-    foreach my $filename ( @files ) {
+    # Shuffle the files so we try different ones at different times and if
+    # dropfile is run in quick succession, they'll try different files.
+    foreach my $filename ( shuffle @files ) {
         my $partial_path = $filename;
         $partial_path =~ s{ \A \/var\/lib\/dropfile\/$bucket }{}gxms;
         $log->info( qq{- $partial_path} );
