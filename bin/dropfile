@@ -71,10 +71,10 @@ sub process {
     # Shuffle the files so we try different ones at different times and if
     # dropfile is run in quick succession, they'll try different files.
     foreach my $filename ( shuffle @files ) {
-        my $partial_path = $filename;
-        $partial_path =~ s{ \A \/var\/lib\/dropfile\/$bucket }{}gxms;
+        my ($partial_path) = $filename =~ m{ \A \/var\/lib\/dropfile\/$bucket\/ (.+) \z }xms;
         $log->info( qq{- $partial_path} );
 
+        # read in the file contents
         my $content = read_file( $filename );
 
         my $data;
@@ -98,7 +98,7 @@ sub process {
         }
     }
 
-    $log->info( qq{Bucket '$bucket' finished} );
+    $log->info("Processing $bucket: done");
     $log->info( q{-} x 79 );
 }
 
