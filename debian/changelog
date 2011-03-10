@@ -1,5 +1,14 @@
-dropfile (0.1.0) unstable; urgency=low
+dropfile (0.1.0) lucid; urgency=low
 
-  * Initial Release.
+  * Initial Repository
+  * Initial version of dropfile
+  * Use a nice small debian/rules file
+  * Upload the files in random order
+  * Fix up some logging and make it nicer
+  * Remove the file once it's been uploaded
+  * Update to the README.markdown
+  * Make sure we use /etc/dropfile/ for all the config (not /var/lib/dropfile/)
+  * Depend on libawssum-perl >= 0.1.0
+  * Prepare for new release of DropMail (v0.1.0)
 
- -- Andrew Chilton <chilts@appsattic.com>  Sat, 05 Mar 2011 14:30:17 +1200
+ -- Andrew Chilton <chilts@appsattic.com>  Thu, 10 Mar 2011 18:17:28 +1300
