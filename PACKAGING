@@ -8,7 +8,7 @@ was 'v0.1.1' and you're on master (ie. v0.1.1..master (master is optional)):
     git tag -l
 
     # now change these numbers
-    export PREV_REL=0.0.0
+    export PREV_REL=
     export RELEASE=0.1.0
 
     # change PACKAGING and bin/dropmail for the new version numbers
