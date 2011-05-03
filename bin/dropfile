@@ -16,7 +16,7 @@ use AwsSum::Amazon::S3;
 ## ----------------------------------------------------------------------------
 # constants, setup and initialisation
 
-my $VERSION = '0.1.0';
+my $VERSION = '0.2.0';
 
 my $confdif = q{/etc/dropfile};
 my $basedir = q{/var/lib/dropfile};
