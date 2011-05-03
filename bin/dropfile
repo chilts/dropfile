@@ -47,7 +47,7 @@ my $log = get_logger();
 sub process {
     my ($bucket) = @_;
 
-    $log->info("Processing $bucket:");
+    $log->info( qq{Processing $bucket:} );
 
     my $cfg = {};
     Config::Simple->import_from( qq{/etc/dropfile/$bucket.conf}, $cfg );
@@ -60,6 +60,11 @@ sub process {
         exit 2;
     }
 
+    # log some details for this bucket
+    foreach my $key ( qw(Region BucketName ) ) {
+        $log->info( qq{* $key = $cfg->{$key}} );
+    }
+
     my $s3 = AwsSum::Amazon::S3->new();
     $s3->access_key_id( $cfg->{AwsAccessKeyId} );
     $s3->secret_access_key( $cfg->{AwsSecretAccessKey} );
@@ -69,11 +74,13 @@ sub process {
     my @files;
     find( sub { -f && push @files, $File::Find::name }, qq{/var/lib/dropfile/$bucket/} );
 
+    $log->info( q{Found } . (scalar @files) . q{ file(s)} );
+
     # Shuffle the files so we try different ones at different times and if
     # dropfile is run in quick succession, they'll try different files.
     foreach my $filename ( shuffle @files ) {
         my ($partial_path) = $filename =~ m{ \A \/var\/lib\/dropfile\/$bucket\/ (.+) \z }xms;
-        $log->info( qq{- $partial_path} );
+        $log->info( qq{- file=$partial_path} );
 
         # read in the file contents
         my $content = read_file( $filename );
@@ -82,7 +89,7 @@ sub process {
         eval {
             $data = $s3->create_object({
                 BucketName => $cfg->{BucketName},
-                ObjectName => $filename,
+                ObjectName => $partial_path,
                 Content    => $content,
             });
         };
@@ -103,6 +110,7 @@ sub process {
             # there was an error, so log it
             $log->error( qq{$data->{_awssum}{error}: $data->{_awssum}{message}} );
         }
+        $log->info( qq{- done} );
     }
 
     $log->info("Processing $bucket: done");
