@@ -1,3 +1,11 @@
+dropfile (0.2.0) lucid; urgency=low
+
+  * Make sure we upload only the $filename and not the /var/lib/dropfile/<dir>/$filename
+  * Fix to the PACKAGING instructions
+  * Prepare for new release of DropFile (v0.2.0)
+
+ -- Andrew Chilton <chilts@appsattic.com>  Tue, 03 May 2011 22:18:02 +1200
+
 dropfile (0.1.0) lucid; urgency=low
 
   * Initial Repository
