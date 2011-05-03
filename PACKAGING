@@ -11,9 +11,9 @@ was 'v0.1.1' and you're on master (ie. v0.1.1..master (master is optional)):
     export PREV_REL=
     export RELEASE=0.1.0
 
-    # change PACKAGING and bin/dropmail for the new version numbers
+    # change PACKAGING and bin/dropfile for the new version numbers
 
-    git commit -m "Prepare for new release of DropMail (v$RELEASE)" PACKAGING bin/dropmail
+    git commit -m "Prepare for new release of DropFile (v$RELEASE)" PACKAGING bin/dropfile
     git show
     git push origin master
 
@@ -42,20 +42,20 @@ h2. Making the Packages and Pushing them to the Debian Repository
 
 Test build:
 
-    dpkg-buildpackage -us -uc -tc -t -b
+    git fetch && git rebase origin/master && dpkg-buildpackage -us -uc -tc -t -b
 
 Add it to the repo:
 
     cd ../packages
     git fetch
     git rebase origin/master
-    ./add-packages.sh ubuntu ../dropmail_${RELEASE}_all.deb
-    find . -name "dropmail_${RELEASE}_all.deb" | xargs git add
+    ./add-packages.sh ubuntu ../dropfile_${RELEASE}_all.deb
+    find . -name "dropfile_${RELEASE}_all.deb" | xargs git add
     git status
 
 Review the updates, rm the files we no longer need, add the new ones and commit:
 
-    git commit -a -m "New release (v$RELEASE) of DropMail" # also deletes the ones missing
+    git commit -a -m "New release (v$RELEASE) of DropFile" # also deletes the ones missing
     git push origin master
 
     make rsync
