@@ -80,6 +80,11 @@ sub process {
     # dropfile is run in quick succession, they'll try different files.
     foreach my $filename ( shuffle @files ) {
         my ($partial_path) = $filename =~ m{ \A \/var\/lib\/dropfile\/$bucket\/ (.+) \z }xms;
+        if ( $partial_path =~ m{ \A \. }xms ) {
+            $log->debug( qq{- skipping '$partial_path'} );
+            next;
+        }
+
         $log->info( qq{- file=$partial_path} );
 
         # read in the file contents
